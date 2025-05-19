@@ -69,7 +69,7 @@ def handle_message(event):
         chat_count[user_id] = {'count': 0, 'month': current_month}
 
     # チャット数確認
-    if chat_count[user_id]['count'] >= 50:
+    if chat_count[user_id]['count'] >= 16:
         message = "今月の無料チャットは終了サモ！来月までスイスイお待ちくださいサモ！"
     else:
         hiremaru_reply = call_hiremaru_gpt(event.message.text)
