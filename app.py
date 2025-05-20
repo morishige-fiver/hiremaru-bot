@@ -12,6 +12,9 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+@app.route("/")
+def index():
+    return "HIREMARU BOT is running!"
 
 line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
