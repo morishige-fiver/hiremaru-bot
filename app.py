@@ -35,18 +35,6 @@ def callback():
         abort(400)
     return 'OK'
 
-# メッセージイベントの受信
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    incoming_text = event.message.text
-    reply_text = f"ヒレまるからの返信サモ！「{incoming_text}」って言ったサモね！"
-    app.logger.info(f"User message: {incoming_text}")       
-    app.logger.info(f"Replying with: {reply_text}")      
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
-
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
