@@ -1,4 +1,5 @@
 from flask import Flask, request, abort
+import logging  
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
@@ -7,17 +8,45 @@ from datetime import datetime
 from collections import defaultdict
 from dotenv import load_dotenv
 import os
+logging.basicConfig(level=logging.INFO)
 
-# 環境変数の読み込み
 load_dotenv()
 
 app = Flask(__name__)
+
 @app.route("/")
 def index():
     return "HIREMARU BOT is running!"
 
-line_bot_api = LineBotApi(os.getenv('LINE_CHANNEL_ACCESS_TOKEN'))
-handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
+# LINE Bot APIの設定
+line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+
+    app.logger.info("Request body: " + body)
+
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    return 'OK'
+
+# メッセージイベントの受信
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    incoming_text = event.message.text
+    reply_text = f"ヒレまるからの返信サモ！「{incoming_text}」って言ったサモね！"
+    app.logger.info(f"User message: {incoming_text}")       
+    app.logger.info(f"Replying with: {reply_text}")      
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
+
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -51,16 +80,6 @@ def call_hiremaru_gpt(user_message):
         temperature=0.7
     )
     return response['choices'][0]['message']['content']
-
-@app.route("/callback", methods=['POST'])
-def callback():
-    signature = request.headers['X-Line-Signature']
-    body = request.get_data(as_text=True)
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        abort(400)
-    return 'OK'
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
