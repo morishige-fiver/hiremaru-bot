@@ -58,16 +58,27 @@ def generate_hiremaru_gpt_prompt(user_message):
 # GPT呼び出し
 def call_hiremaru_gpt(user_message):
     prompt = generate_hiremaru_gpt_prompt(user_message)
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "以下の指示に沿って、ヒレまるとして会話してください。"},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=300,
-        temperature=0.7
-    )
-    return response['choices'][0]['message']['content']
+    app.logger.info(f"Generated prompt: {prompt}")
+    
+    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "以下の指示に沿って、ヒレまるとして会話してください。"},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.7
+        )
+        reply = response.choices[0].message.content
+        app.logger.info(f"GPT Response: {reply}")
+        return reply
+    except Exception as e:
+        app.logger.error(f"Error in GPT call: {str(e)}")
+        return "ごめんサモ...今ちょっと調子が悪いサモ...スイスイ..."
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
